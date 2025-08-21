@@ -225,6 +225,11 @@ Question: ${q}`
     res.status(500).json({ error: err?.message || 'server error' });
   }
 });
+// Root route so Render shows our backend message instead of its info page
+app.get('/', (_req, res) => {
+  res.type('text/plain').send('Anchit backend is running ✅ Try /health or POST /chat');
+});
+
 
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => console.log(`✅ Backend running on :${PORT}`));
