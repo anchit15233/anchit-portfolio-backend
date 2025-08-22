@@ -178,7 +178,12 @@ ${list}`;
 }
 
 // Health check
-app.get('/health', (_, res) => res.json({ ok: true }));
+app.get('/health', (_req, res) => res.json({ ok: true }));
+
+// Root route (human-friendly)
+app.get('/', (_req, res) => {
+  res.type('text/plain').send('Anchit backend is running ✅ Try /health or POST /chat');
+});
 
 // Chat endpoint
 app.post('/chat', async (req, res) => {
@@ -193,13 +198,19 @@ app.post('/chat', async (req, res) => {
       if (key.includes(k)) return res.json({ answer: prefilled(k) });
     }
 
-    // GPT fallback (strict domain)
+    // GPT fallback — strict context, low creativity
     const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-    const system =
-      'You are a concise recruiter assistant for Anchit Sharma. Only answer questions related to Anchit’s background, skills, projects, publications, exams, and experience. If asked anything unrelated, reply: "I can only answer about Anchit’s work." Use the provided structured resume data as ground truth. If a link exists, include it.';
+
+    const system = `
+You are Anchit Sharma’s recruiter assistant.
+Answer **only** using facts explicitly present in the provided JSON context.
+If the answer is not in the context, reply exactly: "I don't have that information."
+Stay concise (4–6 lines). Include links only if they appear in the context.
+If a question is unrelated to Anchit’s work, reply: "I can only answer about Anchit’s work."`;
 
     const response = await client.responses.create({
       model: 'gpt-5',
+      temperature: 0, // deterministic; minimizes guessing
       input: [
         { role: 'system', content: [{ type: 'text', text: system }] },
         {
@@ -207,10 +218,7 @@ app.post('/chat', async (req, res) => {
           content: [
             {
               type: 'text',
-              text: `Context:
-${JSON.stringify(resume, null, 2)}
-
-Question: ${q}`
+              text: `Context:\n${JSON.stringify(resume, null, 2)}\n\nQuestion: ${q}`
             }
           ]
         }
@@ -218,18 +226,14 @@ Question: ${q}`
       max_output_tokens: 600
     });
 
-    const answer = response.output_text || '(no answer)';
+    const answer = response.output_text || "I don't have that information.";
     res.json({ answer });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err?.message || 'server error' });
   }
 });
-// Root route so Render shows our backend message instead of its info page
-app.get('/', (_req, res) => {
-  res.type('text/plain').send('Anchit backend is running ✅ Try /health or POST /chat');
-});
-
 
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => console.log(`✅ Backend running on :${PORT}`));
+
