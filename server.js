@@ -11,7 +11,7 @@ app.use(express.json());
 const allowedOrigins = new Set([
   'http://localhost:3000',
   'http://localhost:8888',
-  'https://YOUR-NETLIFY-SITE.netlify.app' // TODO: replace with your actual Netlify URL
+  'https://anchit-data-analyst.netlify.app' // <- your real Netlify URL
 ]);
 
 app.use(
