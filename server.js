@@ -10,172 +10,158 @@ app.use(express.json());
 const allowedOrigins = new Set([
   'http://localhost:3000',
   'http://localhost:8888',
-  'https://anchit-data-analyst.netlify.app' // <- your real Netlify URL
+  'https://anchit-data-analyst.netlify.app', // your live site
 ]);
 
 app.use(
   cors({
     origin: (origin, cb) => {
-      // allow server-to-server requests & health checks
-      if (!origin) return cb(null, true);
+      if (!origin) return cb(null, true); // server-to-server / health checks
       if (allowedOrigins.has(origin)) return cb(null, true);
       return cb(new Error('CORS: Origin not allowed'));
-    }
+    },
   })
 );
 
-// ===== Resume data (context) =====
-const resume = {
-  name: 'Anchit Sharma',
-  location: 'Delhi, India',
-  email: 'electricfieldon@gmail.com',
-  linkedin: 'https://www.linkedin.com/in/anchit-sharma-26916a342',
-  tagline: 'Entry-level Data Analyst | B.Sc. Chemistry (IGNOU) | Excel · SQL · Power BI',
-  summary:
-    'Entry-level Data Analyst with a strong academic foundation in Chemistry (IIT JAM AIR 2260, NEET UG). Skilled in Excel, SQL (MySQL), and Power BI with hands-on experience in data cleaning, forecasting, dashboards and BI. Seeking entry-level roles in data analytics, BI, edtech, or research.',
-  skills: {
-    tools: [
-      'Excel (Pivots, Charts, Forecasting)',
-      'SQL (MySQL)',
-      'Power BI',
-      'HTML/CSS/JS',
-      'GenAI & Web Deployments'
+// ===== Projects data (the bot ONLY talks about these 3) =====
+const projects = [
+  {
+    id: 1,
+    key: ['neet', 'neet ug', 'forecast', 'cutoff'],
+    title: 'NEET UG Cutoff & Forecast Analysis',
+    link: 'https://tinyurl.com/5n8fhy6n',
+    about:
+      'Analyzed 2020–2024 NEET UG cutoff trends and produced a 2025 forecast range to explain competitiveness across categories.',
+    tools: ['Excel (Power Query, Pivots, Forecast Sheet)', 'Basic statistics'],
+    steps: [
+      'Imported and standardized yearly cutoff datasets (2020–2024).',
+      'Built category/state-wise pivot summaries to compare YoY shifts.',
+      'Identified trend directions and rank–marks sensitivity by bands.',
+      'Generated 2025 forecast ranges using historical trends.',
     ],
-    analysis: ['Data Cleaning', 'EDA', 'Visualization', 'Forecasting', 'BI & Reporting']
+    insights: [
+      'GEN/EWS remained the most competitive; SC/ST lower due to reservation access.',
+      'At 700+ marks, a 10-mark change moves rank by only hundreds; in 600–650, it can shift by thousands (mid-band clustering).',
+      'Competitiveness varied year-over-year; early 2020s showed tighter cutoffs.',
+    ],
+    limitations: [
+      'AIQ closing ranks only; no opening ranks or seat counts.',
+      'No private colleges/state quota; no difficulty adjustment.',
+    ],
   },
-  projects: [
-    {
-      title: 'Excel Data Preparation & Automation',
-      desc:
-        'Automated dataset generation with Excel (RANDBETWEEN/CHOOSE), arithmetic ops, and summaries.',
-      link: 'https://tinyurl.com/3t26vn78',
-      date: 'Aug 2025'
-    },
-    {
-      title: 'NEET UG Cutoff & Forecast Analysis',
-      desc: 'Analyzed 2020–2024 cutoffs; dashboards + forecast for 2025 trends (Excel).',
-      link: 'https://tinyurl.com/5n8fhy6n',
-      date: 'Jul 2025'
-    },
-    {
-      title: 'Medicine Order Website',
-      desc: 'HTML/CSS/JS + WhatsApp order flow with image preview.',
-      link: 'https://tinyurl.com/2vzj7f5k',
-      date: 'Jul 2025 – Present'
-    },
-    {
-      title: 'Excel Data Analysis & Reporting',
-      desc:
-        'VLOOKUP, ROUND, conditional formatting, multi-sheet cleaning, pivots and charts.',
-      link: 'https://tinyurl.com/hbesf3u7',
-      date: 'Jul 2025'
-    },
-    {
-      title: 'DBMS (SQL) — Student & Inventory',
-      desc: 'Relational design; DDL/DML; constraints in MySQL.',
-      link: 'https://tinyurl.com/2s34wdns',
-      date: 'Jul 2025'
-    },
-    {
-      title: 'Madav Sales Dashboard (Power BI)',
-      desc: 'Interactive BI dashboard; Power Query cleaning.',
-      link: 'https://tinyurl.com/524mu2ep',
-      date: 'Aug 2025'
-    }
-  ],
-  publications: [
-    {
-      title: 'Pedagogical Pathway to Quantum Mechanics',
-      link: 'https://doi.org/10.5281/zenodo.16420453'
-    },
-    {
-      title: 'Resolving Indeterminate Forms in First-Order Reaction Kinetics',
-      link: 'https://doi.org/10.5281/zenodo.16416837'
-    }
-  ],
-  experience: [
-    'Data Analyst Intern (Virtual) — Tata Forage (Aug 2025, present): viz & analysis projects',
-    'Subject Matter Expert (Chemistry): step-by-step problem solving for global learners',
-    'CoachingSelect (Jun–Jul 2023): outreach, Google Sheets tracking, digital marketing support'
-  ],
-  exams: [
-    'IIT JAM (Chemistry) — AIR 2260',
-    'NEET UG — Qualified',
-    'JMI B.Sc. Entrance — Qualified'
-  ]
+  {
+    id: 2,
+    key: ['madav', 'power bi', 'profit', 'sales dashboard'],
+    title: 'Madav Sales Dashboard (Power BI)',
+    link: 'https://tinyurl.com/524mu2ep',
+    about:
+      'Full-year (2018) sales & profitability analysis in Power BI. Dataset: 1,500 rows, 500 unique orders.',
+    tools: ['Power BI (DAX, Power Query, interactive dashboards)'],
+    steps: [
+      'Modeled sales facts with measures for Revenue, Profit, AOV, Margin.',
+      'Built state/city, category/sub-category, and payment-mix visuals.',
+      'Identified seasonality and negative-profit orders.',
+    ],
+    insights: [
+      'Total Revenue ₹437,771; Total Profit ₹36,963 (Margin 8.44%); AOV ₹875.54.',
+      'Peak month: Jan 2018 (Revenue ₹61,632); seasonality present.',
+      '≈35% of orders were negative-profit → loss-making sub-categories exist.',
+      'Revenue concentrated in a few states/cities; a few VIP customers dominate.',
+      'Payment mix skewed to COD; UPI/Card should be incentivized.',
+    ],
+    limitations: [
+      'No CustomerID, demographics, SKUs, COGS/discounts, returns, or channels.',
+    ],
+  },
+  {
+    id: 3,
+    key: ['vrinda', 'vrinda store', 'excel sales'],
+    title: 'Vrinda Store Sales (Excel)',
+    link: 'https://tinyurl.com/77atzdw6',
+    about:
+      'Sales analysis for Vrinda Store (2022) across Amazon, Myntra, Flipkart, Ajio, Nalli, etc.',
+    tools: ['Excel (cleaning, pivot tables, charts, dashboards)'],
+    steps: [
+      'Cleaned & prepared orders, revenue, demographics, and shipping fields.',
+      'Built gender, age-group, and category summaries.',
+      'Created state & city revenue dashboards and monthly trend views.',
+      'Analyzed order statuses (delivered, returned, cancelled, refunded).',
+    ],
+    insights: [
+      'Women drove ~64% of revenue; men ~36%.',
+      'Top age segments: 25–34 (~25.2%) and 35–44 (~25.0%).',
+      'Top channels: Amazon (~35.5%), Myntra (~23.3%), Flipkart (~21.6%).',
+      'Top categories: Sets (~49.6% of revenue), Kurtas (~23.4%).',
+      'Top geographies: Maharashtra, Karnataka, UP; cities: Bengaluru, Hyderabad, Delhi.',
+      'Fulfilment: ~92% delivered; ~3% returned; ~2.7% cancelled.',
+    ],
+    limitations: [
+      'No cost/commission data → cannot compute profitability.',
+      'No multi-year view, promotions, or return reasons.',
+    ],
+  },
+];
+
+// ===== Helpers =====
+const byId = (n) => projects.find((p) => p.id === n);
+const matchProject = (q) => {
+  const txt = q.toLowerCase();
+  // by number
+  const numMatch = txt.match(/project\s*(\d+)/);
+  if (numMatch) return byId(Number(numMatch[1]));
+  // by keywords
+  for (const p of projects) {
+    if (p.key.some((k) => txt.includes(k))) return p;
+  }
+  // fuzzy: use title tokens
+  return projects.find((p) =>
+    p.title.toLowerCase().split(/\W+/).some((w) => w && txt.includes(w))
+  );
 };
 
-// ===== Prefilled answers =====
-function prefilled(key) {
-  switch (key.toLowerCase()) {
-    case 'about':
-    case 'about anchit':
-      return `${resume.name} — ${resume.tagline}
-${resume.summary}
+const formatOverview = () => {
+  const list = projects
+    .map(
+      (p) =>
+        `${p.id}. ${p.title}\n   What: ${p.about}\n   Link: ${p.link}`
+    )
+    .join('\n\n');
+  return `Projects — Overview\n\n${list}\n\nTip: reply with "project 1", "project 2", "project 3", or a name like "NEET", "Vrinda", "Madav".`;
+};
 
-LinkedIn: ${resume.linkedin} | Email: ${resume.email}`;
-    case 'skills': {
-      const t = resume.skills.tools.map(s => `• ${s}`).join('\n');
-      const a = resume.skills.analysis.map(s => `• ${s}`).join('\n');
-      return `Skills
-
-Tools & Tech:
-${t}
-
-Analysis:
-${a}`;
-    }
-    case 'projects': {
-      const list = resume.projects
-        .map(
-          (p, i) =>
-            `${i + 1}. ${p.title} — ${p.desc} (${p.date})
-   Link: ${p.link}`
-        )
-        .join('\n\n');
-      return `Projects
-
-${list}`;
-    }
-    case 'papers':
-    case 'publications': {
-      const list = resume.publications
-        .map((p, i) => `${i + 1}. ${p.title}
-   Link: ${p.link}`)
-        .join('\n\n');
-      return `Research Publications
-
-${list}`;
-    }
-    case 'experience': {
-      return `Experience
-
-• ${resume.experience.join('\n• ')}`;
-    }
-    default:
-      return null;
-  }
-}
+const formatDetail = (p) => {
+  const tools = p.tools?.length ? `\nTools/Tech: ${p.tools.join(', ')}` : '';
+  const steps = p.steps?.length ? `\n\nKey Steps:\n- ${p.steps.join('\n- ')}` : '';
+  const insights = p.insights?.length ? `\n\nKey Insights:\n- ${p.insights.join('\n- ')}` : '';
+  const limits = p.limitations?.length ? `\n\nLimitations:\n- ${p.limitations.join('\n- ')}` : '';
+  const link = p.link ? `\n\nLink: ${p.link}` : '';
+  return `${p.title}\n\nAbout: ${p.about}${tools}${steps}${insights}${limits}${link}`;
+};
 
 // ===== Routes =====
 app.get('/health', (_, res) => res.json({ ok: true }));
 
-// Prefilled-only chat (no GPT calls)
+// Projects-only chat
 app.post('/chat', async (req, res) => {
   try {
     const key = (req.body?.question || '').toLowerCase().trim();
     if (!key) return res.status(400).json({ error: 'question is required' });
 
-    const keys = ['about','about anchit','projects','papers','publications','experience','skills'];
-    for (const k of keys) {
-      if (key === k || key.includes(k)) {
-        return res.json({ answer: prefilled(k) });
-      }
+    // overview triggers
+    const overviewTriggers = ['projects', 'project', 'list', 'show projects', 'all projects'];
+    if (overviewTriggers.some((t) => key === t || key.includes(t))) {
+      return res.json({ answer: formatOverview() });
     }
 
-    // Fallback for anything else
+    const proj = matchProject(key);
+    if (proj) {
+      return res.json({ answer: formatDetail(proj) });
+    }
+
+    // fallback: always nudge back to projects
     return res.json({
-      answer: "Please use the buttons: About, Skills, Projects, Experience, Publications."
+      answer:
+        "I’m the Project Insight Bot. Ask for 'projects' to see the list, or say 'project 1', 'project 2', 'project 3', or a name like 'NEET', 'Vrinda', 'Madav'.",
     });
   } catch (err) {
     console.error(err);
@@ -185,8 +171,10 @@ app.post('/chat', async (req, res) => {
 
 // Root route
 app.get('/', (_req, res) => {
-  res.type('text/plain').send('Anchit backend is running ✅ Try /health or POST /chat');
+  res
+    .type('text/plain')
+    .send('Anchit backend is running ✅ Try /health or POST /chat');
 });
 
 const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => console.log(`✅ Backend running on :${PORT}`));
+app.listen(PORT, () => console.log(`✅ Backend listening on :${PORT}`));
