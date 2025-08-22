@@ -17,7 +17,7 @@ const allowedOrigins = new Set([
 app.use(
   cors({
     origin: (origin, cb) => {
-      // allow non-browser requests and health checks
+      // allow server-to-server requests & health checks
       if (!origin) return cb(null, true);
       if (allowedOrigins.has(origin)) return cb(null, true);
       return cb(new Error('CORS: Origin not allowed'));
@@ -72,27 +72,9 @@ const resume = {
       date: 'Jul 2025'
     },
     {
-      title: 'Pivot Table Project',
-      desc: 'Pivot tables to compare categorical/numerical variables (x–y).',
-      link: 'https://tinyurl.com/4bdhbr6r',
-      date: 'Jul 2025'
-    },
-    {
       title: 'DBMS (SQL) — Student & Inventory',
       desc: 'Relational design; DDL/DML; constraints in MySQL.',
       link: 'https://tinyurl.com/2s34wdns',
-      date: 'Jul 2025'
-    },
-    {
-      title: 'Inventory Management (SQL)',
-      desc: 'Suppliers/products/stock schema and queries.',
-      link: 'https://tinyurl.com/yr9nz89d',
-      date: 'Jul 2025'
-    },
-    {
-      title: 'Vrinda Store Sales (Excel)',
-      desc: 'Demographic & platform analysis with slicers + pivot charts.',
-      link: 'https://tinyurl.com/77atzdw6',
       date: 'Jul 2025'
     },
     {
@@ -124,7 +106,7 @@ const resume = {
   ]
 };
 
-// Prefilled answers
+// ===== Prefilled answers =====
 function prefilled(key) {
   switch (key.toLowerCase()) {
     case 'about':
@@ -146,7 +128,6 @@ ${a}`;
     }
     case 'projects': {
       const list = resume.projects
-        .slice(0, 8)
         .map(
           (p, i) =>
             `${i + 1}. ${p.title} — ${p.desc} (${p.date})
@@ -177,15 +158,9 @@ ${list}`;
   }
 }
 
-// Health check
-app.get('/health', (_req, res) => res.json({ ok: true }));
+// ===== Routes =====
+app.get('/health', (_, res) => res.json({ ok: true }));
 
-// Root route (human-friendly)
-app.get('/', (_req, res) => {
-  res.type('text/plain').send('Anchit backend is running ✅ Try /health or POST /chat');
-});
-
-// Chat endpoint
 app.post('/chat', async (req, res) => {
   try {
     const q = (req.body?.question || '').trim();
@@ -198,35 +173,29 @@ app.post('/chat', async (req, res) => {
       if (key.includes(k)) return res.json({ answer: prefilled(k) });
     }
 
-    // GPT fallback — strict context, low creativity
+    // GPT fallback — Chat API
     const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
     const system = `
 You are Anchit Sharma’s recruiter assistant.
-Answer **only** using facts explicitly present in the provided JSON context.
-If the answer is not in the context, reply exactly: "I don't have that information."
-Stay concise (4–6 lines). Include links only if they appear in the context.
-If a question is unrelated to Anchit’s work, reply: "I can only answer about Anchit’s work."`;
+Answer ONLY using facts in the provided context.
+If answer not found, reply: "I don't have that information."
+Stay concise (4–6 lines). Include links only if present in context.
+If unrelated to Anchit, reply: "I can only answer about Anchit’s work."`;
 
-    const response = await client.responses.create({
-      model: 'gpt-5',
-      temperature: 0, // deterministic; minimizes guessing
-      input: [
-        { role: 'system', content: [{ type: 'text', text: system }] },
+    const completion = await client.chat.completions.create({
+      model: "gpt-4o-mini",
+      temperature: 0,
+      messages: [
+        { role: "system", content: system },
         {
-          role: 'user',
-          content: [
-            {
-              type: 'text',
-              text: `Context:\n${JSON.stringify(resume, null, 2)}\n\nQuestion: ${q}`
-            }
-          ]
+          role: "user",
+          content: `Context:\n${JSON.stringify(resume, null, 2)}\n\nQuestion: ${q}`
         }
       ],
-      max_output_tokens: 600
+      max_tokens: 600
     });
 
-    const answer = response.output_text || "I don't have that information.";
+    const answer = completion.choices[0].message?.content || "(no answer)";
     res.json({ answer });
   } catch (err) {
     console.error(err);
@@ -234,6 +203,12 @@ If a question is unrelated to Anchit’s work, reply: "I can only answer about A
   }
 });
 
+// Root route
+app.get('/', (_req, res) => {
+  res.type('text/plain').send('Anchit backend is running ✅ Try /health or POST /chat');
+});
+
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => console.log(`✅ Backend running on :${PORT}`));
 
+  
