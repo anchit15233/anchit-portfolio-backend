@@ -1,7 +1,6 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import OpenAI from 'openai';
 
 dotenv.config();
 const app = express();
@@ -25,7 +24,7 @@ app.use(
   })
 );
 
-// ===== Resume data (context for GPT) =====
+// ===== Resume data (context) =====
 const resume = {
   name: 'Anchit Sharma',
   location: 'Delhi, India',
@@ -161,45 +160,26 @@ ${list}`;
 // ===== Routes =====
 app.get('/health', (_, res) => res.json({ ok: true }));
 
+// Prefilled-only chat (no GPT calls)
 app.post('/chat', async (req, res) => {
   try {
-    const q = (req.body?.question || '').trim();
-    if (!q) return res.status(400).json({ error: 'question is required' });
+    const key = (req.body?.question || '').toLowerCase().trim();
+    if (!key) return res.status(400).json({ error: 'question is required' });
 
-    // Prefilled: quick matches
-    const key = q.toLowerCase();
-    const keys = ['about', 'about anchit', 'projects', 'papers', 'publications', 'experience', 'skills'];
+    const keys = ['about','about anchit','projects','papers','publications','experience','skills'];
     for (const k of keys) {
-      if (key.includes(k)) return res.json({ answer: prefilled(k) });
+      if (key === k || key.includes(k)) {
+        return res.json({ answer: prefilled(k) });
+      }
     }
 
-    // GPT fallback — Chat API
-    const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-    const system = `
-You are Anchit Sharma’s recruiter assistant.
-Answer ONLY using facts in the provided context.
-If answer not found, reply: "I don't have that information."
-Stay concise (4–6 lines). Include links only if present in context.
-If unrelated to Anchit, reply: "I can only answer about Anchit’s work."`;
-
-    const completion = await client.chat.completions.create({
-      model: "gpt-4o-mini",
-      temperature: 0,
-      messages: [
-        { role: "system", content: system },
-        {
-          role: "user",
-          content: `Context:\n${JSON.stringify(resume, null, 2)}\n\nQuestion: ${q}`
-        }
-      ],
-      max_tokens: 600
+    // Fallback for anything else
+    return res.json({
+      answer: "Please use the buttons: About, Skills, Projects, Experience, Publications."
     });
-
-    const answer = completion.choices[0].message?.content || "(no answer)";
-    res.json({ answer });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: err?.message || 'server error' });
+    res.status(500).json({ error: 'server error' });
   }
 });
 
@@ -210,5 +190,3 @@ app.get('/', (_req, res) => {
 
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => console.log(`✅ Backend running on :${PORT}`));
-
-  
