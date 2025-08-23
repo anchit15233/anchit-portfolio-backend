@@ -29,7 +29,8 @@ const projects = [
     id: 1,
     key: ['neet', 'neet ug', 'forecast', 'cutoff'],
     title: 'NEET UG Cutoff & Forecast Analysis',
-    link: 'https://tinyurl.com/5n8fhy6n',
+    // CHANGED → Insights PDF link (not raw file)
+    link: 'https://tinyurl.com/32p4jztb',
     about:
       'Analyzed 2020–2024 NEET UG cutoff trends and produced a 2025 forecast range to explain competitiveness across categories.',
     tools: ['Excel (Power Query, Pivots, Forecast Sheet)', 'Basic statistics'],
@@ -51,9 +52,11 @@ const projects = [
   },
   {
     id: 2,
-    key: ['madav', 'power bi', 'profit', 'sales dashboard'],
-    title: 'Madav Sales Dashboard (Power BI)',
-    link: 'https://tinyurl.com/524mu2ep',
+    // CHANGED → accept both spellings
+    key: ['madav', 'madhav', 'power bi', 'profit', 'sales dashboard'],
+    title: 'Madhav Sales Dashboard (Power BI)',
+    // CHANGED → Insights PDF link
+    link: 'https://tinyurl.com/4up55knj',
     about:
       'Full-year (2018) sales & profitability analysis in Power BI. Dataset: 1,500 rows, 500 unique orders.',
     tools: ['Power BI (DAX, Power Query, interactive dashboards)'],
@@ -77,7 +80,8 @@ const projects = [
     id: 3,
     key: ['vrinda', 'vrinda store', 'excel sales'],
     title: 'Vrinda Store Sales (Excel)',
-    link: 'https://tinyurl.com/77atzdw6',
+    // CHANGED → Insights PDF link
+    link: 'https://tinyurl.com/23sfd7p5',
     about:
       'Sales analysis for Vrinda Store (2022) across Amazon, Myntra, Flipkart, Ajio, Nalli, etc.',
     tools: ['Excel (cleaning, pivot tables, charts, dashboards)'],
@@ -102,6 +106,25 @@ const projects = [
   },
 ];
 
+// ===== Extras (HackerRank, Certificate, Medicine project) =====
+const extras = {
+  hackerrank: {
+    triggers: ['hackerrank', 'hacker rank', 'sql 3 star', 'sql 3⭐', 'sql three star'],
+    text:
+      'HackerRank Profile (SQL 3⭐): https://www.hackerrank.com/profile/electricfieldon',
+  },
+  certificate: {
+    triggers: ['certificate', 'tata', 'forage', 'tata forage', 'internship certificate'],
+    text:
+      'Tata Forage Internship Certificate: https://tinyurl.com/568bn29b',
+  },
+  medicine: {
+    triggers: ['medicine', 'medicine project', 'chemist', 'sanjivani', 'pharmacy'],
+    text:
+      'Medicine Project (Sanjivani Chemist): https://sanjivani-chemist.netlify.app/',
+  },
+};
+
 // ===== Helpers =====
 const byId = (n) => projects.find((p) => p.id === n);
 const matchProject = (q) => {
@@ -119,6 +142,14 @@ const matchProject = (q) => {
   );
 };
 
+const matchExtra = (q) => {
+  const txt = q.toLowerCase();
+  for (const e of Object.values(extras)) {
+    if (e.triggers.some((t) => txt.includes(t))) return e;
+  }
+  return null;
+};
+
 const formatOverview = () => {
   const list = projects
     .map(
@@ -126,7 +157,9 @@ const formatOverview = () => {
         `${p.id}. ${p.title}\n   What: ${p.about}\n   Link: ${p.link}`
     )
     .join('\n\n');
-  return `Projects — Overview\n\n${list}\n\nTip: reply with "project 1", "project 2", "project 3", or a name like "NEET", "Vrinda", "Madav".`;
+  const extraList =
+    '\n\nMore links:\n- HackerRank (SQL 3⭐)\n- Tata Forage Certificate\n- Medicine Project';
+  return `Projects — Overview\n\n${list}${extraList}\n\nTip: reply with "project 1", "project 2", "project 3", a name like "NEET", "Vrinda", "Madhav", or say "HackerRank", "certificate", or "medicine project".`;
 };
 
 const formatDetail = (p) => {
@@ -153,6 +186,12 @@ app.post('/chat', async (req, res) => {
       return res.json({ answer: formatOverview() });
     }
 
+    // extras first (so "medicine project" returns the live link)
+    const extra = matchExtra(key);
+    if (extra) {
+      return res.json({ answer: extra.text });
+    }
+
     const proj = matchProject(key);
     if (proj) {
       return res.json({ answer: formatDetail(proj) });
@@ -161,7 +200,7 @@ app.post('/chat', async (req, res) => {
     // fallback: always nudge back to projects
     return res.json({
       answer:
-        "I’m the Project Insight Bot. Ask for 'projects' to see the list, or say 'project 1', 'project 2', 'project 3', or a name like 'NEET', 'Vrinda', 'Madav'.",
+        'I’m the Project Insight Bot. Ask for "projects" to see the list, say "project 1/2/3", or ask for "HackerRank", "certificate", or "medicine project".',
     });
   } catch (err) {
     console.error(err);
