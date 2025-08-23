@@ -99,7 +99,7 @@ const projects = [
   },
 ];
 
-// ===== Extras (HackerRank, Certificate, Medicine project) =====
+// ===== Extras (HackerRank, Certificate) — Medicine removed =====
 const extras = {
   hackerrank: {
     triggers: ['hackerrank', 'hacker rank', 'sql 3 star', 'sql 3⭐', 'sql three star'],
@@ -110,11 +110,6 @@ const extras = {
     triggers: ['certificate', 'tata', 'forage', 'tata forage', 'internship certificate'],
     text:
       'Tata Forage Internship Certificate: https://tinyurl.com/568bn29b',
-  },
-  medicine: {
-    triggers: ['medicine', 'medicine project', 'chemist', 'sanjivani', 'pharmacy'],
-    text:
-      'Medicine Project (Sanjivani Chemist): https://sanjivani-chemist.netlify.app/',
   },
 };
 
@@ -192,7 +187,7 @@ app.post('/chat', async (req, res) => {
     // fallback
     return res.json({
       answer:
-        'I’m the Project Insight Bot. Ask for "projects" to see the list, say "project 1/2/3", or ask for "HackerRank", "certificate", or "medicine project".',
+        'I’m the Project Insight Bot. Ask for "projects" to see the list, or say "project 1/2/3", or ask for "HackerRank" or "certificate".',
     });
   } catch (err) {
     console.error(err);
@@ -209,7 +204,3 @@ app.get('/', (_req, res) => {
 
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => console.log(`✅ Backend listening on :${PORT}`));
-
-    
-
-   
