@@ -23,16 +23,14 @@ app.use(
   })
 );
 
-// ===== Projects data (the bot ONLY talks about these 3) =====
+// ===== Projects data =====
 const projects = [
   {
     id: 1,
     key: ['neet', 'neet ug', 'forecast', 'cutoff'],
     title: 'NEET UG Cutoff & Forecast Analysis',
-    // CHANGED → Insights PDF link (not raw file)
-    link: 'https://tinyurl.com/32p4jztb',
-    about:
-      'Analyzed 2020–2024 NEET UG cutoff trends and produced a 2025 forecast range to explain competitiveness across categories.',
+    link: 'https://tinyurl.com/32p4jztb', // Insights PDF
+    about: 'Forecasted 2025 NEET UG cutoffs using 2020–2024 trends.',
     tools: ['Excel (Power Query, Pivots, Forecast Sheet)', 'Basic statistics'],
     steps: [
       'Imported and standardized yearly cutoff datasets (2020–2024).',
@@ -52,13 +50,10 @@ const projects = [
   },
   {
     id: 2,
-    // CHANGED → accept both spellings
     key: ['madav', 'madhav', 'power bi', 'profit', 'sales dashboard'],
     title: 'Madhav Sales Dashboard (Power BI)',
-    // CHANGED → Insights PDF link
-    link: 'https://tinyurl.com/4up55knj',
-    about:
-      'Full-year (2018) sales & profitability analysis in Power BI. Dataset: 1,500 rows, 500 unique orders.',
+    link: 'https://tinyurl.com/4up55knj', // Insights PDF
+    about: 'Analyzed 2018 sales & profitability with an interactive Power BI dashboard.',
     tools: ['Power BI (DAX, Power Query, interactive dashboards)'],
     steps: [
       'Modeled sales facts with measures for Revenue, Profit, AOV, Margin.',
@@ -80,10 +75,8 @@ const projects = [
     id: 3,
     key: ['vrinda', 'vrinda store', 'excel sales'],
     title: 'Vrinda Store Sales (Excel)',
-    // CHANGED → Insights PDF link
-    link: 'https://tinyurl.com/23sfd7p5',
-    about:
-      'Sales analysis for Vrinda Store (2022) across Amazon, Myntra, Flipkart, Ajio, Nalli, etc.',
+    link: 'https://tinyurl.com/23sfd7p5', // Insights PDF
+    about: 'Studied 2022 store sales across channels, demographics, and geographies.',
     tools: ['Excel (cleaning, pivot tables, charts, dashboards)'],
     steps: [
       'Cleaned & prepared orders, revenue, demographics, and shipping fields.',
@@ -150,31 +143,30 @@ const matchExtra = (q) => {
   return null;
 };
 
+// ====== BOT MESSAGE FORMATTERS ======
+
+// Overview: names ONLY
 const formatOverview = () => {
   const list = projects
-    .map(
-      (p) =>
-        `${p.id}. ${p.title}\n   What: ${p.about}\n   Link: ${p.link}`
-    )
-    .join('\n\n');
-  const extraList =
-    '\n\nMore links:\n- HackerRank (SQL 3⭐)\n- Tata Forage Certificate\n- Medicine Project';
-  return `Projects — Overview\n\n${list}${extraList}\n\nTip: reply with "project 1", "project 2", "project 3", a name like "NEET", "Vrinda", "Madhav", or say "HackerRank", "certificate", or "medicine project".`;
+    .map((p) => `${p.id}. ${p.title}`)
+    .join('\n');
+  return `Projects — Overview\n\n${list}\n\nTip: reply with "project 1", "project 2", "project 3", or names like "NEET", "Vrinda", "Madhav".`;
 };
 
+// Detail: insights message ending with Insights PDF
 const formatDetail = (p) => {
   const tools = p.tools?.length ? `\nTools/Tech: ${p.tools.join(', ')}` : '';
   const steps = p.steps?.length ? `\n\nKey Steps:\n- ${p.steps.join('\n- ')}` : '';
   const insights = p.insights?.length ? `\n\nKey Insights:\n- ${p.insights.join('\n- ')}` : '';
   const limits = p.limitations?.length ? `\n\nLimitations:\n- ${p.limitations.join('\n- ')}` : '';
-  const link = p.link ? `\n\nLink: ${p.link}` : '';
+  const link = p.link ? `\n\nInsights PDF: ${p.link}` : '';
   return `${p.title}\n\nAbout: ${p.about}${tools}${steps}${insights}${limits}${link}`;
 };
 
 // ===== Routes =====
 app.get('/health', (_, res) => res.json({ ok: true }));
 
-// Projects-only chat
+// Chat route
 app.post('/chat', async (req, res) => {
   try {
     const key = (req.body?.question || '').toLowerCase().trim();
@@ -186,7 +178,7 @@ app.post('/chat', async (req, res) => {
       return res.json({ answer: formatOverview() });
     }
 
-    // extras first (so "medicine project" returns the live link)
+    // extras first
     const extra = matchExtra(key);
     if (extra) {
       return res.json({ answer: extra.text });
@@ -197,7 +189,7 @@ app.post('/chat', async (req, res) => {
       return res.json({ answer: formatDetail(proj) });
     }
 
-    // fallback: always nudge back to projects
+    // fallback
     return res.json({
       answer:
         'I’m the Project Insight Bot. Ask for "projects" to see the list, say "project 1/2/3", or ask for "HackerRank", "certificate", or "medicine project".',
@@ -217,3 +209,7 @@ app.get('/', (_req, res) => {
 
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => console.log(`✅ Backend listening on :${PORT}`));
+
+    
+
+   
