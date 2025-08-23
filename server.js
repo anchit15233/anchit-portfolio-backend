@@ -6,22 +6,40 @@ dotenv.config();
 const app = express();
 app.use(express.json());
 
-// ---- CORS (allow your Netlify site + local dev) ----
-const allowedOrigins = new Set([
+// ---- CORS (allow Netlify prod + previews + localhost) ----
+const allowedExact = new Set([
   'http://localhost:3000',
   'http://localhost:8888',
-  'https://anchit-data-analyst.netlify.app', // your live site
+  'https://anchit-data-analyst.netlify.app', // production
+  // add your custom domain here later if needed:
+  // 'https://anchitsharma.in',
 ]);
+
+function isAllowedOrigin(origin) {
+  if (!origin) return true; // server-to-server / health checks
+  if (allowedExact.has(origin)) return true;
+  // allow any *.netlify.app (covers preview + branch builds)
+  try {
+    const u = new URL(origin);
+    return u.hostname.endsWith('.netlify.app');
+  } catch {
+    return false;
+  }
+}
 
 app.use(
   cors({
     origin: (origin, cb) => {
-      if (!origin) return cb(null, true); // server-to-server / health checks
-      if (allowedOrigins.has(origin)) return cb(null, true);
-      return cb(new Error('CORS: Origin not allowed'));
+      if (isAllowedOrigin(origin)) return cb(null, true);
+      cb(new Error(`CORS: Origin not allowed: ${origin}`));
     },
+    methods: ['GET', 'POST', 'OPTIONS'],
+    allowedHeaders: ['Content-Type'],
   })
 );
+
+// handle preflight
+app.options('*', cors());
 
 // ===== Projects data =====
 const projects = [
@@ -99,7 +117,7 @@ const projects = [
   },
 ];
 
-// ===== Extras (HackerRank, Certificate) — Medicine removed =====
+// ===== Extras (HackerRank, Certificate) =====
 const extras = {
   hackerrank: {
     triggers: ['hackerrank', 'hacker rank', 'sql 3 star', 'sql 3⭐', 'sql three star'],
@@ -117,19 +135,15 @@ const extras = {
 const byId = (n) => projects.find((p) => p.id === n);
 const matchProject = (q) => {
   const txt = q.toLowerCase();
-  // by number
   const numMatch = txt.match(/project\s*(\d+)/);
   if (numMatch) return byId(Number(numMatch[1]));
-  // by keywords
   for (const p of projects) {
     if (p.key.some((k) => txt.includes(k))) return p;
   }
-  // fuzzy: use title tokens
   return projects.find((p) =>
     p.title.toLowerCase().split(/\W+/).some((w) => w && txt.includes(w))
   );
 };
-
 const matchExtra = (q) => {
   const txt = q.toLowerCase();
   for (const e of Object.values(extras)) {
@@ -139,16 +153,11 @@ const matchExtra = (q) => {
 };
 
 // ====== BOT MESSAGE FORMATTERS ======
-
-// Overview: names ONLY
 const formatOverview = () => {
-  const list = projects
-    .map((p) => `${p.id}. ${p.title}`)
-    .join('\n');
+  const list = projects.map((p) => `${p.id}. ${p.title}`).join('\n');
   return `Projects — Overview\n\n${list}\n\nTip: reply with "project 1", "project 2", "project 3", or names like "NEET", "Vrinda", "Madhav".`;
 };
 
-// Detail: insights message ending with Insights PDF
 const formatDetail = (p) => {
   const tools = p.tools?.length ? `\nTools/Tech: ${p.tools.join(', ')}` : '';
   const steps = p.steps?.length ? `\n\nKey Steps:\n- ${p.steps.join('\n- ')}` : '';
@@ -161,19 +170,16 @@ const formatDetail = (p) => {
 // ===== Routes =====
 app.get('/health', (_, res) => res.json({ ok: true }));
 
-// Chat route
 app.post('/chat', async (req, res) => {
   try {
     const key = (req.body?.question || '').toLowerCase().trim();
     if (!key) return res.status(400).json({ error: 'question is required' });
 
-    // overview triggers
     const overviewTriggers = ['projects', 'project', 'list', 'show projects', 'all projects'];
     if (overviewTriggers.some((t) => key === t || key.includes(t))) {
       return res.json({ answer: formatOverview() });
     }
 
-    // extras first
     const extra = matchExtra(key);
     if (extra) {
       return res.json({ answer: extra.text });
@@ -184,7 +190,6 @@ app.post('/chat', async (req, res) => {
       return res.json({ answer: formatDetail(proj) });
     }
 
-    // fallback
     return res.json({
       answer:
         'I’m the Project Insight Bot. Ask for "projects" to see the list, or say "project 1/2/3", or ask for "HackerRank" or "certificate".',
@@ -195,7 +200,6 @@ app.post('/chat', async (req, res) => {
   }
 });
 
-// Root route
 app.get('/', (_req, res) => {
   res
     .type('text/plain')
